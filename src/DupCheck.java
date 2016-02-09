@@ -7,9 +7,21 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
 
-public class DupCheck {
+public class DupCheck extends Thread {
+    private String img1;
+    private String img2;
+
+    public DupCheck(String a, String b) {
+        this.img1 = a;
+        this.img2 = b;
+    }
+    public void run() {
+
+    }
     public static void main(String[] args){
 
         //            getpixels(args[0]);
@@ -47,41 +59,54 @@ public class DupCheck {
         long startTime, endTime;
         if(picsDir.exists()){
             String[] listOfFilesToCheck = picsDir.list();
-            System.out.println("directory holds " + listOfFilesToCheck.length+" files");
+            System.out.println("directory holds " + listOfFilesToCheck.length + " files");
             for(int i = 0; i < listOfFilesToCheck.length; ++i) {
                 for(int u = i + 1; u < listOfFilesToCheck.length; ++u) {
-
-//                    long startTime = System.nanoTime();
-//
-//                    long endTime = System.nanoTime();
-//                    long duration = (endTime - startTime);  //divide by 1000000 to get milliseconds.
-
-//                    System.out.println("resolves as image "+stringResolvesAsImage(listOfFilesToCheck[u]) + " " + stringResolvesAsImage(listOfFilesToCheck[i]));
-                    startTime = System.nanoTime();
-
                     boolean stringsResolve = stringResolvesAsImage(listOfFilesToCheck[u]) && stringResolvesAsImage(listOfFilesToCheck[i]);
-                    endTime = System.nanoTime();
-//                    System.out.println("stringResolveAsImage took :"+ ((endTime - startTime)/1000000));  //divide by 1000000 to get milliseconds.
 
                     if(stringsResolve) {
+
+
+                        // create some kind of image class here
+                        // image class should implement runnable
+                        // call start on it, should spin off and check for the next compare
+                        // should image class take a compare? yea, each thread compares two images and
+                        // prints out the results
+
+                        // how to check for the return? if we find animage we need to mark it
+                        // do that in the runnable? I'll need some storage for the results then
+                        // or I guess I can just print it off for now. Thats what I'm doing anyway
+
+
+
+
+//                        startTime = System.nanoTime();
+//
+//                        File file1 = new File(path + listOfFilesToCheck[i]);
+//                        File file2 = new File(path + listOfFilesToCheck[u]);
+//                        BufferedImage image11 = ImageIO.read(file1);
+//                        BufferedImage image22 = ImageIO.read(file2);
+//
+//                        endTime = System.nanoTime();
+//                        System.out.println("Opening files OLD STYLE took :"+ ((endTime - startTime)/1000000)+" ms");  //divide by 1000000 to get milliseconds.
+
+
                         startTime = System.nanoTime();
 
-                        File file1 = new File(path + listOfFilesToCheck[i]);
-                        File file2 = new File(path + listOfFilesToCheck[u]);
-
-                        BufferedImage image1 = ImageIO.read(file1);
-                        BufferedImage image2 = ImageIO.read(file2);
+                        BufferedImage image1 = ImageIO.read(Files.newInputStream(Paths.get(path + listOfFilesToCheck[i])));
+                        BufferedImage image2 = ImageIO.read(Files.newInputStream(Paths.get(path + listOfFilesToCheck[u])));
 
                         endTime = System.nanoTime();
-                        System.out.println("Opening files took :"+ ((endTime - startTime)/1000000)+" ms");  //divide by 1000000 to get milliseconds.
+//                        System.out.println("Opening files NEW STYLE took :"+ ((endTime - startTime)/1000000)+" ms");  //divide by 1000000 to get milliseconds.
 
+//                        System.out.println("");
                         // check the size, only continue if the size is identical
                         if(isSameSize(image1, image2)) {
                             startTime = System.nanoTime();
 
                             dupfound = isExactDuplicate(image1, image2);
                             endTime = System.nanoTime();
-                            System.out.println("isExactDuplicate took :"+ (endTime - startTime) + " ns");  //divide by 1000000 to get milliseconds.
+//                            System.out.println("isExactDuplicate took :"+ (endTime - startTime) + " ns");  //divide by 1000000 to get milliseconds.
 
                             ++totalCompares;
                             if(dupfound) {
@@ -90,6 +115,7 @@ public class DupCheck {
 //                                System.out.println("NOT Dup " + path + listOfFilesToCheck[i] + " == " + path + listOfFilesToCheck[u]);
                             }
                         }
+
                     }
                 }
             }
