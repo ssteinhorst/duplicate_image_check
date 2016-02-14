@@ -9,7 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DupCheck  {
 
@@ -34,8 +40,8 @@ public class DupCheck  {
         // then come up with a clever way to process the map to output
 
 //        String path = "/Users/scotts/data/workspace/test/";
-//        String path = "/Users/scotts/Mine/DCIM/";
-        String path = "/Users/scotts/Mine/wallpaper/";
+        String path = "/Users/scotts/Mine/DCIM/";
+//        String path = "/Users/scotts/Mine/wallpaper/";
 
         try {
             System.out.println(checkForDuplicates(path));
@@ -47,76 +53,46 @@ public class DupCheck  {
         File picsDir = new File(path);
         boolean dupfound = false;
 
+
+//        final BlockingQueue<File> queue = new ArrayBlockingQueue<File>(1000);
+
+
+
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+
+
+        BufferedImage img1;
+
         int totalCompares = 0;
 //        long startTime, endTime;
         if(picsDir.exists()){
             String[] listOfFilesToCheck = picsDir.list();
             System.out.println("directory holds " + listOfFilesToCheck.length + " files");
             for(int i = 0; i < listOfFilesToCheck.length; ++i) {
-                for(int u = i + 1; u < listOfFilesToCheck.length; ++u) {
-                    boolean stringsResolve = stringResolvesAsImage(listOfFilesToCheck[u]) && stringResolvesAsImage(listOfFilesToCheck[i]);
-
-                    if(stringsResolve) {
-                        System.out.println("Checking: "+listOfFilesToCheck[i]+" "+ listOfFilesToCheck[u]);
-//                        ImageCompareThread compareThread = new ImageCompareThread(path, listOfFilesToCheck[i], listOfFilesToCheck[u]);
-//                        compareThread.run();
-                        (new Thread(new ImageCompareThread(path, listOfFilesToCheck[i], listOfFilesToCheck[u]))).start();
-//                        (new Thread(new HelloRunnable())).start();
-                        // create some kind of image class here
-                        // image class should implement runnable
-                        // call start on it, should spin off and check for the next compare
-                        // should image class take a compare? yea, each thread compares two images and
-                        // prints out the results
-
-                        // how to check for the return? if we find animage we need to mark it
-                        // do that in the runnable? I'll need some storage for the results then
-                        // or I guess I can just print it off for now. Thats what I'm doing anyway
 
 
+                if (stringResolvesAsImage(listOfFilesToCheck[i])) {
+                    File file1 = new File(path + listOfFilesToCheck[i]);
+                    img1 = ImageIO.read(file1);
 
+//                    img1 = ImageIO.read(Files.newInputStream(Paths.get(path + listOfFilesToCheck[i])));
 
-//                        startTime = System.nanoTime();
-//
-//                        File file1 = new File(path + listOfFilesToCheck[i]);
-//                        File file2 = new File(path + listOfFilesToCheck[u]);
-//                        BufferedImage image11 = ImageIO.read(file1);
-//                        BufferedImage image22 = ImageIO.read(file2);
-//
-//                        endTime = System.nanoTime();
-//                        System.out.println("Opening files OLD STYLE took :"+ ((endTime - startTime)/1000000)+" ms");  //divide by 1000000 to get milliseconds.
+                    for (int u = i + 1; u < listOfFilesToCheck.length; ++u) {
+//                        boolean stringsResolve = stringResolvesAsImage(listOfFilesToCheck[u]) && stringResolvesAsImage(listOfFilesToCheck[i]);
 
-
-//                        startTime = System.nanoTime();
-
-//                        BufferedImage image1 = ImageIO.read(Files.newInputStream(Paths.get(path + listOfFilesToCheck[i])));
-//                        BufferedImage image2 = ImageIO.read(Files.newInputStream(Paths.get(path + listOfFilesToCheck[u])));
-//
-//                        endTime = System.nanoTime();
-////                        System.out.println("Opening files NEW STYLE took :"+ ((endTime - startTime)/1000000)+" ms");  //divide by 1000000 to get milliseconds.
-//
-////                        System.out.println("");
-//                        // check the size, only continue if the size is identical
-//                        if(isSameSize(image1, image2)) {
-//                            startTime = System.nanoTime();
-//
-//                            dupfound = isExactDuplicate(image1, image2);
-//                            endTime = System.nanoTime();
-////                            System.out.println("isExactDuplicate took :"+ (endTime - startTime) + " ns");  //divide by 1000000 to get milliseconds.
-//
-//                            ++totalCompares;
-//                            if(dupfound) {
-//                                System.out.println("Dup " + path + listOfFilesToCheck[i] + " == " + path + listOfFilesToCheck[u]);
-//                            } else {
-////                                System.out.println("NOT Dup " + path + listOfFilesToCheck[i] + " == " + path + listOfFilesToCheck[u]);
-//                            }
-//                        }
-
+                        if (stringResolvesAsImage(listOfFilesToCheck[u])) {
+//                            System.out.println("Checking: " + listOfFilesToCheck[i] + " " + listOfFilesToCheck[u]);
+                            ArrayList<String> filesToCompare = new ArrayList<String>(Arrays.asList(Arrays.copyOfRange(listOfFilesToCheck, u, listOfFilesToCheck.length)));
+//                            executor.submit(new Thread(new ImageCompareThread(path, img1, listOfFilesToCheck[i], listOfFilesToCheck[u], filesToCompare, totalCompares)));
+                            executor.execute( new ImageCompareThread(path, img1, listOfFilesToCheck[i], listOfFilesToCheck[u], filesToCompare, totalCompares) );
+                        }
                     }
                 }
             }
         } else {
             System.out.println("Invalid Directory");
         }
+        executor.shutdown();
         System.out.println("total compares: "+totalCompares);
         return dupfound;
     }

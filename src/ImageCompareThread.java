@@ -1,32 +1,46 @@
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class ImageCompareThread implements Runnable {
-    private String image1;
-    private String image2;
+    private BufferedImage image1;
+    private String image2name;
+    private String image1name;
     private String path;
+    private ArrayList<String> listOfFilesToCheck;
+    private int totalCompares;
 
-    public ImageCompareThread(String pth, String img1, String img2) {
+    public ImageCompareThread(String pth, BufferedImage img1, String img1name, String img2, ArrayList<String> fileList, int totalCompares) {
         this.path = pth;
         this.image1 = img1;
-        this.image2 = img2;
+        this.image2name = img2;
+        this.image1name = img1name;
+        this.totalCompares = totalCompares;
+        //unused yet
+        this.listOfFilesToCheck = fileList;
     }
     @Override
     public void run() {
 
         boolean dupfound;
 
-        BufferedImage image1 = null;
+        // wrap this in a loop and loop through all the compares in this one
+
+
+//        BufferedImage image1 = null;
         BufferedImage image2 = null;
+//            image1 = ImageIO.read(Files.newInputStream(Paths.get(this.path + this.image1)));
         try {
-            image1 = ImageIO.read(Files.newInputStream(Paths.get(this.path + this.image1)));
-            image2 = ImageIO.read(Files.newInputStream(Paths.get(this.path + this.image2)));
+//            image2 = ImageIO.read(Files.newInputStream(Paths.get(this.path + this.image2name)));
+            File file2 = new File(this.path + this.image2name);
+            image2 = ImageIO.read(file2);
+
+
         } catch (IOException e) {
-            // this should never happen unless the file system is changing while
-            // this is running
             e.printStackTrace();
         }
 
@@ -44,9 +58,9 @@ public class ImageCompareThread implements Runnable {
 
 //            ++totalCompares;
             if(dupfound) {
-                System.out.println("Dup " + path + this.image1 + " == " + path + this.image2);
+                System.out.println("Dup " + path + this.image1name + " == " + path + this.image2name);
             } else {
-                System.out.println("NOT Dup " + path + this.image1 + " == " + path + this.image2);
+                System.out.println("NOT Dup " + path + this.image1name + " == " + path + this.image2name);
             }
         }
     }
