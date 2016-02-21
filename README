@@ -1,0 +1,6 @@
+This application loops through the directory and outputs the paths
+of duplicate images.
+
+To run:
+
+java -jar duplicate_checker.jar <path to images>
