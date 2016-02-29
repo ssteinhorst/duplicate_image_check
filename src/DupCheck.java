@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +21,6 @@ public class DupCheck  {
         // parse args for -r flag for recursive search
         // also populate the path
         for(int i = 0; i < args.length; ++i){
-//        for (String arg : args) {
             if(args[i].equals("-r")) {
                 doRecursive = true;
             } else if(args[i].equals("-p")) {
@@ -34,41 +35,36 @@ public class DupCheck  {
     }
 
     public static void checkForDuplicates(String path, boolean doRecursive) throws IOException {
-        File picsDir = new File(path);
-
+//        File picsDir = new File(path);
+        // TODO: clean up this queue, arbitary huge queue should work better
         final BlockingQueue<ImageCompare> queue = new ArrayBlockingQueue<ImageCompare>(10000000);
+        ArrayList<File> listOfFilesToCheck = getFiles(path, doRecursive);
+
+        // TODO: seperate the putting of things into the queue and
+        // the running of the things from the queue
+        // they need to run async
 
         int totalCompares = 0;
 //        long startTime, endTime;
-        if(picsDir.exists()) {
-            ArrayList<File> listOfFilesToCheck = getFilesIncludingSubdir(path);
-//            List<String> listOfFilesToCheck = Arrays.asList(picsDir.list());
+        if(listOfFilesToCheck.size() > 0) {
             System.out.println("directory holds " + listOfFilesToCheck.size() + " files");
             for(int i = 0; i < listOfFilesToCheck.size(); ++i) {
-
-                if (resolvesAsImage(listOfFilesToCheck.get(i))) {
-
-                    for (int u = i + 1; u < listOfFilesToCheck.size(); ++u) {
-                        if (resolvesAsImage(listOfFilesToCheck.get(u))) {
-//                            System.out.println("Checking: " + listOfFilesToCheck[i] + " " + listOfFilesToCheck[u]);
-                            queue.add( new ImageCompare(path, listOfFilesToCheck.get(i), listOfFilesToCheck.get(u)) );
-                            ++totalCompares;
-                        }
-                    }
+                for (int u = i + 1; u < listOfFilesToCheck.size(); ++u) {
+                    queue.add( new ImageCompare(listOfFilesToCheck.get(i), listOfFilesToCheck.get(u)) );
+                    ++totalCompares;
                 }
             }
         } else {
-            System.out.println("Invalid Directory");
+            return;
         }
 
-        ExecutorService pool = Executors.newFixedThreadPool(10);
+        ExecutorService pool = Executors.newFixedThreadPool(5);
 
         for(int i = 0; i < 1; i++){
             Runnable r = new Runnable(){
                 public void run() {
                     ImageCompare workFile;
                     while((workFile = queue.poll()) != null){
-//                        System.out.println("starting check of files "+workFile.image1name+" "+workFile.image2name);
                         workFile.check();
                     }
                 }
@@ -80,8 +76,27 @@ public class DupCheck  {
         System.out.println("total compares: "+totalCompares);
     }
 
-    private static ArrayList<File> getFilesIncludingSubdir(String path) {
-        return getFilesIncludingSubdir(path, new ArrayList<File>() );
+    public static ArrayList<File> getFiles(String path, boolean doRecursive) {
+        File filesPath = new File(path);
+        if(filesPath.exists()) {
+            // we are looking for images recursively in this code path
+            if (doRecursive) {
+                return getFilesIncludingSubdir(path, new ArrayList<File>());
+            } else {
+                // just return the top level images in this codepath
+                ArrayList<File> singleLevelFileList = new ArrayList<File>();
+                for(File file : filesPath.listFiles()) {
+                    if(resolvesAsImage(file)) {
+                        singleLevelFileList.add(file);
+                    }
+                }
+                return singleLevelFileList;
+            }
+        } else {
+            // invalid file path, return empty list and output error message
+            System.out.println("Invalid path");
+            return new ArrayList<File>();
+        }
     }
 
     private static ArrayList<File> getFilesIncludingSubdir(String path, ArrayList<File> results) {
@@ -100,12 +115,12 @@ public class DupCheck  {
         return results;
     }
 
-    private static boolean resolvesAsImage(File file) {
+    public static boolean resolvesAsImage(File file) {
         return resolvesAsImage(file.getName());
     }
 
     // named to be readable with statement "if (resolvesAsImage)"
-    private static boolean resolvesAsImage(String file) {
+    public static boolean resolvesAsImage(String file) {
 
         boolean retVal = false;
         String validTypes = "jpeg, jpg, tiff, png, bmp";
