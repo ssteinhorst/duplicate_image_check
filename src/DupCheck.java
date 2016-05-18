@@ -12,11 +12,8 @@ public class DupCheck  {
 
 
     public static void main(String[] args){
-
-        String path = "/Users/scotts/data/workspace/duplicate_checker/test/test_images/";
+        String path;
         boolean doRecursive = false;
-//        String path = "/Users/scotts/Mine/DCIM/";
-//        String path = "/Users/scotts/Mine/wallpaper/";
 
         // parse args for -r flag for recursive search
         // also populate the path
