@@ -20,24 +20,14 @@ public class ImageCompare {
 
         boolean dupfound;
 //        long startTime, endTime;
-        try {
-            // Only process files of equal size, good for exact maches
-            if(file1.length() != file2.length()) {
-                return false;
-            }
+        // Only process files of equal size, good for exact maches
+//            if(file1.length() != file2.length()) {
+//                return false;
+//            }
 
-//            startTime = System.nanoTime();
-
-            this.image1 = ImageIO.read(this.file1);
-            this.image2 = ImageIO.read(this.file2);
-
-//            endTime = System.nanoTime();
-//            System.out.println("creating Image objects took :"+ (endTime - startTime) + " ns");  //divide by 1000000 to get milliseconds.
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(!createImageObjects()) {
+            return false;
         }
-
         // check the resolution, only continue if it is identical
         if(isSameResolution(image1, image2)) {
 //            startTime = System.nanoTime();
@@ -60,6 +50,27 @@ public class ImageCompare {
         }
     }
 
+    public boolean createImageObjects() {
+        try {
+//            startTime = System.nanoTime();
+
+            this.image1 = ImageIO.read(this.file1);
+            this.image2 = ImageIO.read(this.file2);
+            if(this.image1 == null) {
+                System.out.println("Format error. File cannot be opend as image: "+file1.getAbsolutePath());
+                return false;
+            } else if(this.image2 == null) {
+                System.out.println("Format error. File cannot be opend as image: "+file2.getAbsolutePath());
+                return false;
+            }
+//            endTime = System.nanoTime();
+//            System.out.println("creating Image objects took :"+ (endTime - startTime) + " ns");  //divide by 1000000 to get milliseconds.
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
     private boolean isSameResolution(BufferedImage image1, BufferedImage image2) {
         // return true if sizes are identical
         if(image1.getHeight() == image2.getHeight() && image1.getWidth() == image2.getWidth()) {

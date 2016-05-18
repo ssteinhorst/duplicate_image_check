@@ -13,7 +13,7 @@ public class DupCheck  {
 
     public static void main(String[] args){
 
-        String path = "/Users/scotts/data/workspace/test_images/";
+        String path = "/Users/scotts/data/workspace/duplicate_checker/test/test_images/";
         boolean doRecursive = false;
 //        String path = "/Users/scotts/Mine/DCIM/";
 //        String path = "/Users/scotts/Mine/wallpaper/";
@@ -35,9 +35,10 @@ public class DupCheck  {
     }
 
     public static void checkForDuplicates(String path, boolean doRecursive) throws IOException {
-//        File picsDir = new File(path);
+
+        // TODO: this code removed, threading not needed yet but still fun
         // TODO: clean up this queue, arbitary huge queue should work better
-        final BlockingQueue<ImageCompare> queue = new ArrayBlockingQueue<ImageCompare>(10000000);
+//        final BlockingQueue<ImageCompare> queue = new ArrayBlockingQueue<ImageCompare>(10000000);
         ArrayList<File> listOfFilesToCheck = getFiles(path, doRecursive);
 
         // TODO: seperate the putting of things into the queue and
@@ -45,33 +46,49 @@ public class DupCheck  {
         // they need to run async
 
         int totalCompares = 0;
-//        long startTime, endTime;
+
         if(listOfFilesToCheck.size() > 0) {
             System.out.println("directory holds " + listOfFilesToCheck.size() + " files");
             for(int i = 0; i < listOfFilesToCheck.size(); ++i) {
                 for (int u = i + 1; u < listOfFilesToCheck.size(); ++u) {
-                    queue.add( new ImageCompare(listOfFilesToCheck.get(i), listOfFilesToCheck.get(u)) );
+                    (new ImageCompare(listOfFilesToCheck.get(i), listOfFilesToCheck.get(u))).check();
                     ++totalCompares;
+
                 }
             }
         } else {
             return;
         }
 
-        ExecutorService pool = Executors.newFixedThreadPool(5);
 
-        for(int i = 0; i < 1; i++){
-            Runnable r = new Runnable(){
-                public void run() {
-                    ImageCompare workFile;
-                    while((workFile = queue.poll()) != null){
-                        workFile.check();
-                    }
-                }
-            };
-            pool.execute(r);
-        }
-        pool.shutdown();
+// TODO: this code removed, threading not needed yet but still fun
+//        long startTime, endTime;
+//        if(listOfFilesToCheck.size() > 0) {
+//            System.out.println("directory holds " + listOfFilesToCheck.size() + " files");
+//            for(int i = 0; i < listOfFilesToCheck.size(); ++i) {
+//                for (int u = i + 1; u < listOfFilesToCheck.size(); ++u) {
+//                    queue.add( new ImageCompare(listOfFilesToCheck.get(i), listOfFilesToCheck.get(u)) );
+//                    ++totalCompares;
+//                }
+//            }
+//        } else {
+//            return;
+//        }
+//
+//        ExecutorService pool = Executors.newFixedThreadPool(5);
+//
+//        for(int i = 0; i < 1; i++){
+//            Runnable r = new Runnable(){
+//                public void run() {
+//                    ImageCompare workFile;
+//                    while((workFile = queue.poll()) != null){
+//                        workFile.check();
+//                    }
+//                }
+//            };
+//            pool.execute(r);
+//        }
+//        pool.shutdown();
 
         System.out.println("total compares: "+totalCompares);
     }
@@ -94,7 +111,7 @@ public class DupCheck  {
             }
         } else {
             // invalid file path, return empty list and output error message
-            System.out.println("Invalid path");
+            System.out.println("getFiles error: Invalid path");
             return new ArrayList<File>();
         }
     }

@@ -20,4 +20,18 @@ public class ImageCompareTest {
         ImageCompare compare = new ImageCompare(file1, file2);
         assertEquals(true, compare.check());
     }
+    @Test
+    public void testOpeningInvalidFile() throws Exception {
+        File file1 = new File("./test/test_images/not_an_image.jpg");
+        File file2 = new File("./test/test_images/random_copy.png");
+        ImageCompare compare = new ImageCompare(file1, file2);
+        assertEquals(false, compare.createImageObjects());
+    }
+    @Test
+    public void testOpeningValidFile() throws Exception {
+        File file1 = new File("./test/test_images/random.png");
+        File file2 = new File("./test/test_images/random_copy.png");
+        ImageCompare compare = new ImageCompare(file1, file2);
+        assertEquals(true, compare.createImageObjects());
+    }
 }
