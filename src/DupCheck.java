@@ -12,7 +12,7 @@ public class DupCheck  {
 
 
     public static void main(String[] args){
-        String path;
+        String path = null;
         boolean doRecursive = false;
 
         // parse args for -r flag for recursive search
@@ -27,7 +27,12 @@ public class DupCheck  {
         try {
             checkForDuplicates(path, doRecursive);
         } catch (IOException e) {
-            e.printStackTrace();
+            //print usage info
+            System.out.println("outputs the path of duplicate images");
+            System.out.println("-r for recursive");
+            System.out.println("-p to pass a path to scan");
+            System.out.println("Example: duplicate_checker -r -p /path/to/images");
+//            e.printStackTrace();
         }
     }
 
